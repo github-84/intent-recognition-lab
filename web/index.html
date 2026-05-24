@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>意图识别测试台</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+      background: #f6f7fb;
+      color: #172033;
+      min-height: 100vh;
+    }
+    .shell {
+      width: min(1040px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 48px 0;
+    }
+    header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 24px;
+      margin-bottom: 28px;
+    }
+    h1 {
+      font-size: clamp(28px, 4vw, 44px);
+      line-height: 1.1;
+      margin: 0 0 10px;
+      letter-spacing: 0;
+    }
+    .subtitle {
+      margin: 0;
+      color: #617089;
+      max-width: 680px;
+      line-height: 1.7;
+    }
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border: 1px solid #d9dfeb;
+      border-radius: 8px;
+      background: #ffffff;
+      color: #617089;
+      font-size: 14px;
+      white-space: nowrap;
+    }
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #a0a8b8;
+    }
+    .dot.ok { background: #1fbd7a; }
+    .dot.bad { background: #e55353; }
+    .workspace {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(320px, .9fr);
+      gap: 20px;
+    }
+    .panel {
+      background: #ffffff;
+      border: 1px solid #dfe5ef;
+      border-radius: 8px;
+      box-shadow: 0 12px 30px rgba(24, 36, 62, .08);
+    }
+    .input-panel { padding: 22px; }
+    label {
+      display: block;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+    textarea {
+      width: 100%;
+      min-height: 150px;
+      resize: vertical;
+      border: 1px solid #ccd5e3;
+      border-radius: 8px;
+      padding: 14px;
+      font: inherit;
+      line-height: 1.6;
+      color: #172033;
+      outline: none;
+    }
+    textarea:focus {
+      border-color: #2f6fed;
+      box-shadow: 0 0 0 3px rgba(47, 111, 237, .12);
+    }
+    .actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 14px;
+      flex-wrap: wrap;
+    }
+    button {
+      border: 0;
+      border-radius: 8px;
+      cursor: pointer;
+      font: inherit;
+      font-weight: 700;
+      min-height: 40px;
+    }
+    .primary {
+      background: #2f6fed;
+      color: #ffffff;
+      padding: 0 18px;
+    }
+    .primary:disabled {
+      opacity: .65;
+      cursor: wait;
+    }
+    .ghost {
+      color: #2f6fed;
+      background: #edf3ff;
+      padding: 0 12px;
+    }
+    .examples {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 18px;
+    }
+    .example {
+      background: #f3f6fb;
+      color: #43536c;
+      border: 1px solid #dfe5ef;
+      padding: 8px 10px;
+      min-height: 34px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .result {
+      padding: 22px;
+      min-height: 100%;
+    }
+    .result h2 {
+      margin: 0 0 16px;
+      font-size: 20px;
+    }
+    .intent {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 16px;
+      background: #f5f8fd;
+      border: 1px solid #dfe5ef;
+      border-radius: 8px;
+      margin-bottom: 16px;
+    }
+    .intent-name {
+      font-size: 24px;
+      font-weight: 800;
+    }
+    .intent-code {
+      color: #617089;
+      font-size: 13px;
+      margin-top: 2px;
+    }
+    .confidence {
+      color: #2f6fed;
+      font-weight: 800;
+      font-size: 24px;
+      white-space: nowrap;
+    }
+    .bars {
+      display: grid;
+      gap: 10px;
+    }
+    .bar-row {
+      display: grid;
+      grid-template-columns: 96px 1fr 48px;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+      color: #43536c;
+    }
+    .bar-track {
+      height: 10px;
+      border-radius: 999px;
+      background: #edf1f7;
+      overflow: hidden;
+    }
+    .bar-fill {
+      height: 100%;
+      width: 0;
+      border-radius: inherit;
+      background: #2f6fed;
+      transition: width .25s ease;
+    }
+    .message {
+      margin-top: 14px;
+      color: #d33f49;
+      min-height: 24px;
+    }
+    @media (max-width: 760px) {
+      header, .workspace { display: block; }
+      .status { margin-top: 18px; }
+      .result { margin-top: 16px; }
+      .bar-row { grid-template-columns: 84px 1fr 42px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header>
+      <div>
+        <h1>意图识别测试台</h1>
+        <p class="subtitle">输入客服场景中的自然语言话术，调用本地 FastAPI 服务，查看模型识别出的意图类别、置信度和完整概率分布。</p>
+      </div>
+      <div class="status" id="status"><span class="dot"></span><span>检查服务中</span></div>
+    </header>
+
+    <section class="workspace">
+      <div class="panel input-panel">
+        <label for="text">用户话术</label>
+        <textarea id="text" placeholder="例如：我想退货，麻烦帮我处理一下">我想退货</textarea>
+        <div class="actions">
+          <button class="primary" id="predict">识别意图</button>
+          <button class="ghost" id="clear">清空</button>
+        </div>
+        <div class="examples" id="examples"></div>
+        <div class="message" id="message"></div>
+      </div>
+
+      <div class="panel result">
+        <h2>识别结果</h2>
+        <div class="intent">
+          <div>
+            <div class="intent-name" id="intentName">等待识别</div>
+            <div class="intent-code" id="intentCode">intent</div>
+          </div>
+          <div class="confidence" id="confidence">--</div>
+        </div>
+        <div class="bars" id="bars"></div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const API_BASE = "http://127.0.0.1:8000";
+    const examples = [
+      "帮我查一下订单到哪了",
+      "这个订单我不想要了",
+      "我想退货退款",
+      "这款手机有黑色吗",
+      "帮我转人工客服",
+      "你好，在吗"
+    ];
+    const textEl = document.querySelector("#text");
+    const predictBtn = document.querySelector("#predict");
+    const clearBtn = document.querySelector("#clear");
+    const messageEl = document.querySelector("#message");
+    const statusEl = document.querySelector("#status");
+    const intentNameEl = document.querySelector("#intentName");
+    const intentCodeEl = document.querySelector("#intentCode");
+    const confidenceEl = document.querySelector("#confidence");
+    const barsEl = document.querySelector("#bars");
+    const examplesEl = document.querySelector("#examples");
+
+    function setStatus(ok, text) {
+      statusEl.innerHTML = `<span class="dot ${ok ? "ok" : "bad"}"></span><span>${text}</span>`;
+    }
+
+    function percent(value) {
+      return `${Math.round(value * 100)}%`;
+    }
+
+    function renderResult(data) {
+      intentNameEl.textContent = data.intent_name;
+      intentCodeEl.textContent = data.intent;
+      confidenceEl.textContent = percent(data.confidence);
+      barsEl.innerHTML = Object.entries(data.probabilities)
+        .map(([label, score]) => {
+          const name = data.probability_names[label] || label;
+          return `
+            <div class="bar-row">
+              <span>${name}</span>
+              <div class="bar-track"><div class="bar-fill" style="width: ${score * 100}%"></div></div>
+              <strong>${percent(score)}</strong>
+            </div>
+          `;
+        })
+        .join("");
+    }
+
+    async function checkHealth() {
+      try {
+        const response = await fetch(`${API_BASE}/health`);
+        setStatus(response.ok, response.ok ? "服务已连接" : "服务异常");
+      } catch (error) {
+        setStatus(false, "服务未启动");
+      }
+    }
+
+    async function predict() {
+      const text = textEl.value.trim();
+      if (!text) {
+        messageEl.textContent = "请输入一句用户话术。";
+        return;
+      }
+
+      predictBtn.disabled = true;
+      messageEl.textContent = "";
+      try {
+        const response = await fetch(`${API_BASE}/predict`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text })
+        });
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.detail || "识别失败");
+        }
+        renderResult(data);
+      } catch (error) {
+        messageEl.textContent = `请求失败：${error.message}`;
+      } finally {
+        predictBtn.disabled = false;
+      }
+    }
+
+    examples.forEach((item) => {
+      const button = document.createElement("button");
+      button.className = "example";
+      button.type = "button";
+      button.textContent = item;
+      button.addEventListener("click", () => {
+        textEl.value = item;
+        predict();
+      });
+      examplesEl.appendChild(button);
+    });
+
+    predictBtn.addEventListener("click", predict);
+    clearBtn.addEventListener("click", () => {
+      textEl.value = "";
+      messageEl.textContent = "";
+      textEl.focus();
+    });
+    textEl.addEventListener("keydown", (event) => {
+      if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
+        predict();
+      }
+    });
+
+    checkHealth();
+  </script>
+</body>
+</html>

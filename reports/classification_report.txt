@@ -1,0 +1,17 @@
+Intent Recognition Classification Report
+Accuracy: 0.8182
+Train samples: 86
+Test samples: 22
+
+                 precision    recall  f1-score   support
+
+   cancel_order     0.6667    0.6667    0.6667         3
+       greeting     1.0000    0.6667    0.8000         3
+  human_service     1.0000    1.0000    1.0000         4
+product_consult     0.5714    1.0000    0.7273         4
+    query_order     1.0000    0.7500    0.8571         4
+         refund     1.0000    0.7500    0.8571         4
+
+       accuracy                         0.8182        22
+      macro avg     0.8730    0.8056    0.8180        22
+   weighted avg     0.8766    0.8182    0.8257        22
