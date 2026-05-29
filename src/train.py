@@ -17,7 +17,7 @@ DATA_PATH = PROJECT_ROOT / "data" / "intents.csv"
 MODEL_PATH = PROJECT_ROOT / "models" / "intent_model.joblib"
 REPORT_DIR = PROJECT_ROOT / "reports"
 
-
+#数据
 def load_dataset(path: Path) -> pd.DataFrame:
     df = pd.read_csv(path)
     required_columns = {"text", "intent"}
